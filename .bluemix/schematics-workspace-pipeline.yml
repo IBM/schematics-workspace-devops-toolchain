@@ -1,0 +1,87 @@
+---
+inputs:
+  - type: git
+    branch: ${PIPELINE_REPO_BRANCH}
+    service: ${PIPELINE_REPO}
+    path: .pipeline
+  - type: git
+    branch: master
+    service: ${TEKTON_CATALOG_REPO}
+    path: git
+  - type: git
+    branch: master
+    service: ${TEKTON_CATALOG_REPO}
+    path: container-registry
+  - type: git
+    service: ${TEKTON_CATALOG_REPO}
+    branch: master
+    path: kubernetes-service
+  - type: git
+    service: ${TEKTON_CATALOG_REPO}
+    branch: master
+    path: toolchain
+  - type: git
+    service: ${TEKTON_CATALOG_REPO}
+    branch: master
+    path: devops-insights
+  - type: git
+    branch: master
+    service: ${TEKTON_CATALOG_REPO}
+    path: linter
+  - type: git
+    branch: master
+    service: ${TEKTON_CATALOG_REPO}
+    path: tester
+  - type: git
+    branch: master
+    service: ${TEKTON_CATALOG_REPO}
+    path: utils
+triggers:
+  # we don't need the git trigger for now as we only need to run the pipeline manually once to d/l the initial terraform template files.
+  # - type: git
+  #   name: commit-push
+  #   eventListener: ${GIT_COMMIT_EVENT_LISTENER_NAME}
+  #   service: ${APP_REPO}
+  #   branch: master
+  #   events: { "push": true }
+  - type: manual
+    name: manual-run
+    eventListener: manual-run
+    properties: []
+properties:
+  - type: text
+    name: ibmcloud-api
+    value: ${IBM_CLOUD_API}
+  - type: secure
+    name: toolchain-apikey
+    value: ${API_KEY}
+  - name: apikey
+    value: ${API_KEY}
+    type: SECURE
+  - name: devops-apikey
+    value: ${DEVOPS_API_KEY}
+    type: SECURE
+  - name: image-name
+    value: ${APP_NAME}
+    type: text
+  - name: app-name
+    value: ${APP_NAME}
+    type: text
+  - name: dev-region
+    value: ${PROD_REGION_ID}
+    type: text
+  - name: dev-resource-group
+    value: ${PROD_RESOURCE_GROUP}
+    type: text
+  - name: workspace-id
+    value: ${WORKSPACE_ID}
+    type: text
+  - name: terraform-request
+    value: ${TERRAFORM_REQUEST}
+    type: text
+  - name: pipeline-debug
+    type: single_select
+    value:
+      "0": true
+      "1": false
+    

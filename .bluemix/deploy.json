@@ -1,0 +1,112 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "messages": {
+        "$i18n": "locales.yml"
+    },
+    "title": {
+        "$ref": "#/messages/deploy.title"
+    },
+    "description": {
+        "$ref": "#/messages/deploy.description"
+    },
+    "longDescription": {
+        "$ref": "#/messages/deploy.longDescription"
+    },
+    "type": "object",
+    "properties": {
+        "api-key": {
+            "description": {
+                "$ref": "#/messages/deploy.apikeyDescription"
+            },
+            "type": "string",
+            "pattern": "\\S",
+            "validator": {
+                "v-type": "api-key"
+            }
+        },
+        "prod-region": {
+            "description": {
+                "$ref": "#/messages/deploy.regionDescription"
+            },
+            "type": "string",
+            "disabled": false,
+            "validator": {
+                "v-type": "k8s-region",
+                "params": ["api-key"]
+            }
+        },
+        "prod-resource-group": {
+            "description": {
+                "$ref": "#/messages/deploy.rgDescription"
+            },
+            "type": "string",
+            "validator": {
+                "v-type": "resource-group",
+                "params": ["api-key"]
+            }
+        },
+        "app-name": {
+            "description": {
+                "$ref": "#/messages/deploy.appDescription"
+            },
+            "type": "string",
+            "pattern": "\\S"
+        }
+    },
+    "required": ["app-name", "api-key", "prod-region", "prod-resource-group", ],
+    "form": [{
+            "type": "validator",
+            "url": "/devops/validator/validator-v1.html"
+        }, {
+            "type": "text",
+            "readonly": false,
+            "title": {
+                "$ref": "#/messages/deploy.appName"
+            },
+            "key": "app-name"
+        }, {
+            "type": "password",
+            "readonly": false,
+            "title": {
+                "$ref": "#/messages/deploy.apikey"
+            },
+            "key": "api-key"
+        }, {
+            "type": "table",
+            "columnCount": 4,
+            "widths": ["25%", "25%", "25%", "25%"],
+            "items": [{
+                    "type": "label",
+                    "title": "Region"
+                }, {
+                    "type": "label",
+                    "title": ""
+                },
+                {
+                    "type": "label",
+                    "title": {
+                        "$ref": "#/messages/deploy.rg"
+                    }
+                }, {
+                    "type": "label",
+                    "title": ""
+                },
+                {
+                    "type": "select",
+                    "key": "prod-region"
+                }, {
+                    "type": "label",
+                    "title": ""
+                },
+                {
+                    "type": "select",
+                    "key": "prod-resource-group",
+                    "readonly": false
+                }, {
+                    "type": "label",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

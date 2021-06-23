@@ -1,0 +1,127 @@
+version: '2'
+messages:
+  $i18n: locales.yml
+template:
+  description: DevX Schematics Workspace Toolchain
+  name: Create a toolchain for deploying to Schematics workspaces
+  required:
+  - repo
+  - pipeline-repo
+  - tekton-catalog-repo
+  - schematics-workspace-pipeline
+toolchain:
+  name: >
+    $env.toolchainName ? '{{toolchainName}}' : 'my-schematics-workspace-toolchain'
+services:
+  repo:
+    service_id: hostedgit
+    parameters:
+      repo_name: >
+        $env.toolchainName ? '{{toolchainName}}' : 'hello-schematics-{{timestamp}}'
+      # TODO: put this into IBM org
+      repo_url: >
+        $env.type === 'link' ? $env.app_repo :
+          $env.sourceZipUrl ? '{{sourceZipUrl}}' :
+            'https://github.com/gee4vee/schematics-workspace-template'
+      source_repo_url: >
+        $env.type === 'fork' || $env.type === 'clone' ? $env.app_repo :
+          $env.sourceZipUrl ? '{{sourceZipUrl}}' :
+            'https://github.com/gee4vee/schematics-workspace-template'
+      type: $env.type || 'clone'
+      has_issues: false
+      enable_traceability: true
+      legal: true
+
+  pipeline-repo:
+    service_id: githubconsolidated
+    parameters:
+      # TODO: put this into IBM org
+      repo_url: "https://github.com/gee4vee/schematics-workspace-devops-toolchain"
+      type: 'link'
+      has_issues: false
+      enable_traceability: false
+      kind: ['pipeline']
+  
+  tekton-catalog-repo:
+    service_id: githubconsolidated
+    parameters:
+      repo_url: "https://github.com/open-toolchain/tekton-catalog"
+      type: "link"
+      has_issues: false
+      enable_traceability: false
+      kind: ['pipeline']
+  
+  schematics-workspace-pipeline:
+    service_id: pipeline
+    parameters:
+      services:
+        - repo
+        - pipeline-repo
+        - tekton-catalog-repo
+      name: 'schematics-workspace-pipeline'
+      ui-pipeline: true
+      type: tekton
+      configuration:
+        content:
+          $text: schematics-workspace-pipeline.yml
+        env:
+          IBM_CLOUD_API: >
+            $env.ibmcloudApi ? '{{ibmcloudApi}}' : "https://cloud.ibm.com"
+          APP_REPO: repo
+          APP_NAME: "{{form.pipeline.parameters.app-name}}"
+          ARTIFACTORY_DOCKER_CONFIG_JSON: '{{form.artifactoryComp.parameters.docker_config_json}}'
+          PRIVATE_WORKER: '{{services.privateWorker.parameters.name}}'
+          API_KEY: "{{form.pipeline.parameters.api-key}}"
+          DEVOPS_API_KEY: "{{form.pipeline.parameters.devops-api-key}}"
+          PROD_REGION_ID: "{{form.pipeline.parameters.prod-region}}"
+          PROD_RESOURCE_GROUP: "{{form.pipeline.parameters.prod-resource-group}}"
+          APP_REPO_FULL: >
+            if ( $env.source_provider === 'githubconsolidated' ) {
+              "https://github.com/{{services.repo.parameters.owner_id}}/{{services.repo.parameters.repo_name}}";
+            } else if ( $env.source_provider === 'hostedgit' && $env.env_id === 'ibm:yp:au-syd' ) {
+              "https://au-syd.git.cloud.ibm.com/{{services.repo.parameters.owner_id}}/{{services.repo.parameters.repo_name}}"
+            } else if ( $env.source_provider === 'gitlab' ) {
+              "https://gitlab.com/{{services.repo.parameters.owner_id}}/{{services.repo.parameters.repo_name}}";
+            } else if ( $env.source_provider === 'bitbucketgit' ) {
+              "https://bitbucket.org/{{services.repo.parameters.owner_id}}/{{services.repo.parameters.repo_name}}";
+            } else if ( $env.source_provider === 'github_integrated' ) {
+              "https://github.ibm.com/{{services.repo.parameters.owner_id}}/{{services.repo.parameters.repo_name}}";
+            } else {
+              "https://us-south.git.cloud.ibm.com/{{services.repo.parameters.owner_id}}/{{services.repo.parameters.repo_name}}"
+            }
+          PIPELINE_REPO: pipeline-repo
+          PIPELINE_REPO_BRANCH: >
+            $env.branch ? $env.branch : "workspace-tar-upload"
+          TEKTON_CATALOG_REPO: tekton-catalog-repo
+          GIT_COMMIT_EVENT_LISTENER_NAME: >
+            if ( $env.source_provider === 'githubconsolidated' ) {
+              'github-commit';
+            } else if ( $env.source_provider === 'gitlab' ) {
+              'grit-or-gitlab-commit';
+            } else if ( $env.source_provider === 'bitbucketgit' ) {
+              'bitbucket-commit';
+            } else if ( $env.source_provider === 'github_integrated' ) {
+              'github-ent-commit';
+            } else {
+              'grit-or-gitlab-commit';
+            }
+          WORKSPACE_ID: "{{form.pipeline.parameters.workspace-id}}"
+          TERRAFORM_REQUEST: "{{form.pipeline.parameters.terraform-request}}"
+        execute: >
+          $env.pipeline_type === 'tekton' ? 'manual-run' : true
+
+form:
+  pipeline:
+    parameters:
+      app-name: >
+        $env.appName ? '{{appName}}' : '{{services.repo.parameters.repo_name}}'
+      workspace-id: >
+        $env.workspaceId ? '{{workspaceId}}' : "12345"
+      terraform-request: >
+        $env.terraformRequest ? '{{terraformRequest}}' : ''
+      api-key: '{{apiKey}}'
+      devops-api-key: '{{devOpsApiKey}}'
+      prod-region: '{{prodRegion}}'
+      prod-resource-group: '{{prodResourceGroup}}'
+    schema:
+      $ref: deploy.json
