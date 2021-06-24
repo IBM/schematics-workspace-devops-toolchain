@@ -91,7 +91,7 @@ spec:
 
         # check if we've already done the initial push. dont re-add files if we have.
         cd /artifacts/schematics-workspace-$(params.workspace-id)
-        if [ ! -f ./main.tf ] && [ ! -f ./provider.tf ] && ! -f ./variables.tf ]; then
+        if [ ! -f ./main.tf ] && [ ! -f ./provider.tf ] && [ ! -f ./variables.tf ]; then
           # log into Cloud
           DEV_REGION=$(params.dev-region)
           DEV_REGION=${DEV_REGION##*:}
@@ -99,18 +99,23 @@ spec:
           TOKEN=$(ibmcloud iam oauth-tokens --output JSON | jq -r '.iam_token')
 
           # d/l the terraform template files from console solutions API
-          curl -X 'POST' "$CONSOLE_SOLUTIONS_API/template/zip?schematics=true&terraformer_request=$(params.terraform-request)" \
-            -H 'accept: application/zip' -H "Authorization: $TOKEN" --output $ZIP_NAME
-          unzip $ZIP_NAME
-          rm ./$ZIP_NAME
+          RESPONSE=$(curl -X 'POST' -s "$CONSOLE_SOLUTIONS_API/template/zip?schematics=true&terraformer_request=$(params.terraform-request)" \
+            -H 'accept: application/zip' -H "Authorization: $TOKEN" --output $ZIP_NAME -w "%{http_code}")
+          if [ $RESPONSE == "201" ]; then
+            unzip $ZIP_NAME
+            rm ./$ZIP_NAME
 
-          # push files to the repository
-          mv templateForZip_*/* .
-          git config --global user.email "devops@cloud.ibm.com"
-          git config --global user.name "IBM Cloud DevOps Toolchain - schematics-workspace-pipeline"
-          git add *
-          git commit -m "feat: terraform template files for workspace $(params.workspace-id)"
-          git push
+            # push files to the repository
+            mv templateForZip_*/* .
+            git config --global user.email "devops@cloud.ibm.com"
+            git config --global user.name "IBM Cloud DevOps Toolchain - schematics-workspace-pipeline"
+            git add *
+            git commit -m "feat: terraform template files for workspace $(params.workspace-id)"
+            git push
+          else
+            echo "Received error response $RESPONSE when downloading Terraform template files"
+            exit 1
+          fi
         else
           echo "Terraform template files already downloaded and pushed to the repository"
         fi
