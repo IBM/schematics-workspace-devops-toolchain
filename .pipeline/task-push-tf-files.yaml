@@ -91,7 +91,7 @@ spec:
 
         # check if we've already done the initial push. dont re-add files if we have.
         cd /artifacts/schematics-workspace-$(params.workspace-id)
-        if [ ! -f main.tf ] && [ ! -f provider.tf ] && ! -f variables.tf ]; then
+        if [ ! -f ./main.tf ] && [ ! -f ./provider.tf ] && ! -f ./variables.tf ]; then
           # log into Cloud
           DEV_REGION=$(params.dev-region)
           DEV_REGION=${DEV_REGION##*:}
