@@ -12,7 +12,7 @@ spec:
       description: The git repo
     - name: branch
       description: the branch for the git repo
-      default: "master"
+      default: "main"
     - name: revision
       description: the git revision/commit for the git repo
       default: ""
