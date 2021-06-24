@@ -22,11 +22,11 @@ services:
       repo_url: >
         $env.type === 'link' ? $env.app_repo :
           $env.sourceZipUrl ? '{{sourceZipUrl}}' :
-            'https://github.com/gee4vee/schematics-workspace-template'
+            'https://github.com/IBM/schematics-workspace-template'
       source_repo_url: >
         $env.type === 'fork' || $env.type === 'clone' ? $env.app_repo :
           $env.sourceZipUrl ? '{{sourceZipUrl}}' :
-            'https://github.com/gee4vee/schematics-workspace-template'
+            'https://github.com/IBM/schematics-workspace-template'
       type: $env.type || 'clone'
       has_issues: false
       enable_traceability: true
@@ -36,7 +36,7 @@ services:
     service_id: githubconsolidated
     parameters:
       # TODO: put this into IBM org
-      repo_url: "https://github.com/gee4vee/schematics-workspace-devops-toolchain"
+      repo_url: "https://github.com/IBM/schematics-workspace-devops-toolchain"
       type: 'link'
       has_issues: false
       enable_traceability: false
